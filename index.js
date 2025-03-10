@@ -6,7 +6,7 @@ import express from "express";
 import bodyParser from "body-parser";
 import cookieParser from "cookie-parser";
 import database from "./src/config/database.js";
-
+import generate from "./src/models/general.model.js";
 // Set up config
 dotenv.config();
 
@@ -38,6 +38,8 @@ app.use(cookieParser("secret"));
 
 // route init
 // route(app);
+const product = await generate.getCategoryId(1);
+console.log(product);
 
 const port = process.env.PORT;
 
