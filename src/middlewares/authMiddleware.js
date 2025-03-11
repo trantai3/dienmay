@@ -1,7 +1,7 @@
 import db from "../config/database.js";
 import jwt from "jsonwebtoken";
 import { promisify } from "util";
-import generate from "../models/general.model.js";
+import general from "../models/general.model.js";
 
 export const isLoggedIn = async (req, res, next) => {
   try {
@@ -48,6 +48,39 @@ export const checkUnAuth = (req, res, next) => {
   if (!req.cookies.userSave) {
     res.status(401).redirect("/");
   } else {
+    next();
+  }
+};
+
+export const getLoggedIn = async (req, res, next) => {
+  if (!req.cookies.userSave) {
+    return next();
+  }
+  try {
+    // 1. Xác thực token
+    const decoded = await promisify(jwt.verify)(
+      req.cookies.userSave,
+      process.env.JWT_SECRET
+    );
+    // Kiểm tra người dùng còn tồn tại không
+    const query = promisify(db.query).bind(db);
+    const results = await query("SELECT * FROM view_user WHERE user_id = ?", [
+      decoded.id,
+    ]);
+
+    if (!results.length) {
+      return next();
+    }
+
+    // 3. Định dạng ngày sinh
+    results.forEach((user) => {
+      user.user_birth_format = general.toDDMMYYYY(new Date(user.user_birth));
+    });
+
+    req.user = results[0];
+    next();
+  } catch (err) {
+    console.error("Error in getLoggedIn:", err);
     next();
   }
 };

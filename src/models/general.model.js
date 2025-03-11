@@ -3,7 +3,7 @@ import util from "node:util";
 
 const query = util.promisify(db.query).bind(db);
 
-const generate = {
+const general = {
   // Hàm xử lý datetỉme ---> Thứ x, ngày x tháng x năm x
   toXDDMMYYYY(datetime) {
     const days = [
@@ -46,7 +46,7 @@ const generate = {
     const date = datetime.getDate().toString().padStart(2, "0");
     const month = (datetime.getMonth() + 1).toString().padStart(2, "0");
     const year = datetime.getFullYear();
-    return `${date} tháng ${month} năm ${year} ${generate.toHHMM(datetime)}`;
+    return `${date} tháng ${month} năm ${year} ${general.toHHMM(datetime)}`;
   },
   // Hàm xử lý tiền tệ
   toCurrency(money) {
@@ -195,7 +195,7 @@ const generate = {
   // Lấy danh sách các biến thể
   async getProductVariants(product_variant_id) {
     try {
-      const product_id = await generate.getProductId(product_variant_id);
+      const product_id = await general.getProductId(product_variant_id);
       if (!product_id) return [];
 
       const sql = `SELECT * FROM view_product_variant_detail WHERE product_id = ?`;
@@ -218,4 +218,4 @@ const generate = {
   },
 };
 
-export default generate;
+export default general;
