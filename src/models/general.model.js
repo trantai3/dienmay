@@ -192,6 +192,21 @@ const generate = {
       return null;
     }
   },
+  // Lấy danh sách các biến thể
+  async getProductVariants(product_variant_id) {
+    try {
+      const product_id = await generate.getProductId(product_variant_id);
+      if (!product_id) return [];
+
+      const sql = `SELECT * FROM view_product_variant_detail WHERE product_id = ?`;
+      const productVariants = await query(sql, [product_id]);
+
+      return productVariants;
+    } catch (error) {
+      console.error("Lỗi khi lấy danh sách biến thể sản phẩm:", error);
+      return [];
+    }
+  },
 };
 
 export default generate;
