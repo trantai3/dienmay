@@ -1,6 +1,7 @@
 import db from "../config/database.js";
-import until from "node:util";
-const query = until.promisify(db.query).bind(db);
+import util from "node:util";
+
+const query = util.promisify(db.query).bind(db);
 
 const generate = {
   // Hàm xử lý datetỉme ---> Thứ x, ngày x tháng x năm x
@@ -55,13 +56,13 @@ const generate = {
   async getProductId(product_variant_id) {
     const sql = `SELECT product_id FROM product_variants WHERE product_variant_id = ?`;
     const result = await query(sql, [product_variant_id]);
-    return result.length > 0 ? result[0].product_id : null;
+    return result.length ? result[0].product_id : null;
   },
   // Lấy id của danh mục
   async getCategoryId(product_id) {
     const sql = `SELECT category_id FROM view_product_variants WHERE product_id = ?`;
     const results = await query(sql, [product_id]);
-    return results.length > 0 ? results[0].category_id : null;
+    return results.length ? results[0].category_id : null;
   },
   // Lấy danh sách sản phẩm bán chạy
   async getBestSellerProductsOfCates(category_id, limit) {
@@ -69,74 +70,56 @@ const generate = {
       SELECT * FROM view_products_resume 
       WHERE category_id = ? 
       ORDER BY product_variant_is_bestseller DESC
-      LIMIT 0, ?
-  `;
+      LIMIT ?;
+    `;
     try {
-      const bestSellerProductsOfCates = await new Promise((resolve, reject) => {
-        db.query(sql, [category_id, limit], (err, results) => {
-          if (err) {
-            return reject(err);
-          }
-          resolve(results);
-        });
-      });
-      return bestSellerProductsOfCates;
+      return await query(sql, [category_id, limit]);
     } catch (error) {
-      console.error("Lỗi khi lấy danh sách sản phẩm bán chạy: ", error);
-      return 0;
+      console.error("Lỗi khi lấy danh sách sản phẩm bán chạy:", error);
+      return [];
     }
   },
-  // Mỗi danh mục sẽ có 8 sản phẩm bán chạy
+  // Lấy danh mục sản phẩm (Mỗi danh mục có 8 sản phẩm bán chạy)
   async getCates() {
-    const getCateQuery = `
-      SELECT categories.*, COUNT(product_id) AS category_count
-      FROM categories 
-      LEFT JOIN products
-        ON products.category_id = categories.category_id
-        AND category_is_display = 1
-      GROUP BY category_id;
-  `;
+    const sql = `
+      SELECT c.*, COUNT(p.product_id) AS category_count
+      FROM categories c
+      LEFT JOIN products p ON p.category_id = c.category_id AND c.category_is_display = 1
+      GROUP BY c.category_id;
+    `;
     try {
-      const cates = await new Promise((resolve, reject) => {
-        db.query(getCateQuery, (err, results) => {
-          if (err) {
-            return reject(err);
-          }
-          resolve(results);
-        });
-      });
-      // Với mỗi danh mục, lấy danh sách sản phẩm bán chạy và gán vào thuộc tính danh mục
+      const cates = await query(sql);
       await Promise.all(
         cates.map(async (cate) => {
-          const bestSellerProducts = await getBestSellerProductsOfCates(
-            Number(cate.category_id),
-            8
-          );
-          cate.bestSellerProductsOfCates = bestSellerProducts;
+          cate.bestSellerProductsOfCates =
+            await this.getBestSellerProductsOfCates(cate.category_id, 8);
         })
       );
       return cates;
     } catch (error) {
-      console.error("Lỗi khi lấy danh mục: ", error);
-      return 0;
+      console.error("Lỗi khi lấy danh mục:", error);
+      return [];
     }
   },
-  // Lấy sản phẩm nổi bật
+  // Lấy sản phẩm nổi bật (7 sản phẩm có lượt xem cao nhất)
   async getOutstandingProducts() {
-    const sql =
-      "SELECT * FROM view_products_resume ORDER BY product_view_count DESC LIMIT 0, 7";
+    const sql = `SELECT * FROM view_products_resume ORDER BY product_view_count DESC LIMIT 7`;
     try {
-      const outstandingProducts = await new Promise((resolve, reject) => {
-        db.query(sql, (err, results) => {
-          if (err) {
-            return reject(err);
-          }
-          resolve(results);
-        });
-      });
-      return outstandingProducts;
+      return await query(sql);
     } catch (error) {
-      console.error("Lỗi khi lấy sản phẩm nổi bật: ", error);
+      console.error("Lỗi khi lấy sản phẩm nổi bật:", error);
+      return [];
+    }
+  },
+  // Lấy danh sách các sản phẩm mới nhất từ bảng
+  async getNewProducts() {
+    try {
+      const sql =
+        "SELECT * FROM view_products_resume ORDER BY product_lastdate_added DESC";
+      const newProducts = await query(sql);
+      return newProducts;
+    } catch (error) {
+      console.error("Lỗi khi lấy sản phẩm mới:", error);
       return 0;
     }
   },
