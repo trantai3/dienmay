@@ -56,13 +56,13 @@ const generate = {
   async getProductId(product_variant_id) {
     const sql = `SELECT product_id FROM product_variants WHERE product_variant_id = ?`;
     const result = await query(sql, [product_variant_id]);
-    return result.length ? result[0].product_id : null;
+    return result.length ? result[0].product_id : [];
   },
   // Lấy id của danh mục
   async getCategoryId(product_id) {
     const sql = `SELECT category_id FROM view_product_variants WHERE product_id = ?`;
     const results = await query(sql, [product_id]);
-    return results.length ? results[0].category_id : null;
+    return results.length ? results[0].category_id : [];
   },
   // Lấy danh sách sản phẩm bán chạy
   async getBestSellerProductsOfCates(category_id, limit) {
@@ -120,7 +120,7 @@ const generate = {
       return newProducts;
     } catch (error) {
       console.error("Lỗi khi lấy sản phẩm mới:", error);
-      return 0;
+      return [];
     }
   },
   // Lấy danh sách sản phẩm có giảm giá
@@ -132,7 +132,30 @@ const generate = {
       return discountProducts;
     } catch (error) {
       console.error("Lỗi khi lấy sản phẩm giảm giá:", error);
-      return 0;
+      return [];
+    }
+  },
+  // Lấy danh sách các sản phẩm có cùng danh mục
+  async getCateProducts(req, product_variant_id, limit = 8) {
+    try {
+      let product_id = await general.getProductId(product_variant_id);
+      let category_id = await general.getCategoryId(product_id);
+
+      // Nếu có category_id từ query params thì dùng nó, nếu không thì dùng category_id lấy từ DB
+      category_id = req.query.category_id || category_id;
+
+      const sql = `
+          SELECT * FROM view_products_resume 
+          WHERE category_id = ? 
+          ORDER BY product_variant_is_bestseller DESC
+          LIMIT ?
+      `;
+
+      const cateProducts = await query(sql, [category_id, limit]);
+      return cateProducts;
+    } catch (error) {
+      console.error("Lỗi khi lấy danh sách sản phẩm theo danh mục:", error);
+      return [];
     }
   },
 };
