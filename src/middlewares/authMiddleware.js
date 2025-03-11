@@ -1,6 +1,7 @@
 import db from "../config/database.js";
 import jwt from "jsonwebtoken";
 import { promisify } from "util";
+import generate from "../models/general.model.js";
 
 export const isLoggedIn = async (req, res, next) => {
   try {
@@ -38,6 +39,14 @@ export const isLoggedIn = async (req, res, next) => {
 export const checkAuth = (req, res, next) => {
   if (req.cookies.userSave) {
     res.redirect("/");
+  } else {
+    next();
+  }
+};
+
+export const checkUnAuth = (req, res, next) => {
+  if (!req.cookies.userSave) {
+    res.status(401).redirect("/");
   } else {
     next();
   }
