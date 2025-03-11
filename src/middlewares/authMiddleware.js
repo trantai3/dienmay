@@ -34,3 +34,11 @@ export const isLoggedIn = async (req, res, next) => {
     res.status(401).redirect("/auth/login");
   }
 };
+
+export const checkAuth = (req, res, next) => {
+  if (req.cookies.userSave) {
+    res.redirect("/");
+  } else {
+    next();
+  }
+};
