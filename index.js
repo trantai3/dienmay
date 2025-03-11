@@ -38,8 +38,8 @@ app.use(cookieParser("secret"));
 
 // route init
 // route(app);
-const product = await generate.getCategoryId(1);
-console.log(product);
+// const product = await generate.getCategoryId(1);
+// console.log(product);
 
 const port = process.env.PORT;
 

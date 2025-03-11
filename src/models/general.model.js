@@ -158,6 +158,40 @@ const generate = {
       return [];
     }
   },
+  // Lấy danh sách sản phẩm không cùng danh mục với sản phẩm được chọn
+  async getNotCateProducts(req, product_variant_id, limit = 8) {
+    try {
+      let product_id = await general.getProductId(product_variant_id);
+      let category_id =
+        req.query.category_id || (await general.getCategoryId(product_id));
+
+      const sql = `
+          SELECT * FROM view_products_resume 
+          WHERE category_id != ? 
+          ORDER BY product_variant_is_bestseller DESC 
+          LIMIT ?;
+      `;
+
+      return await query(sql, [category_id, limit]);
+    } catch (error) {
+      console.error(
+        "Lỗi khi lấy danh sách sản phẩm không cùng danh mục:",
+        error
+      );
+      return [];
+    }
+  },
+  // Lấy chi tiết một biến thể của sản phẩm
+  async getVariantProduct(product_variant_id) {
+    try {
+      const sql = `SELECT * FROM view_product_variants WHERE product_variant_id = ?`;
+      const variantProduct = await query(sql, [product_variant_id]);
+      return variantProduct.length ? variantProduct[0] : null;
+    } catch (error) {
+      console.error("Lỗi khi lấy biến thể sản phẩm:", error);
+      return null;
+    }
+  },
 };
 
 export default generate;
