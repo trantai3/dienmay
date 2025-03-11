@@ -207,6 +207,15 @@ const generate = {
       return [];
     }
   },
+  // Lấy phương thức định dạng dữ liệu
+  async formatFunction() {
+    const formatFunction = {
+      toCurrency: general.toCurrency,
+      toDDMMYYYY: general.toDDMMYYYY,
+      toHHMM: general.toHHMM,
+    };
+    return formatFunction;
+  },
 };
 
 export default generate;
