@@ -123,6 +123,18 @@ const generate = {
       return 0;
     }
   },
+  // Lấy danh sách sản phẩm có giảm giá
+  async getDiscountProducts() {
+    try {
+      const sql =
+        "SELECT * FROM view_product_variants WHERE discount_amount IS NOT NULL ORDER BY discount_amount DESC";
+      const discountProducts = await query(sql);
+      return discountProducts;
+    } catch (error) {
+      console.error("Lỗi khi lấy sản phẩm giảm giá:", error);
+      return 0;
+    }
+  },
 };
 
 export default generate;
