@@ -33,3 +33,8 @@ export const checkAuth = (req, res, next) => {
   const token = req.cookies?.adminSave;
   return token ? res.redirect("/admin/") : next();
 };
+
+export const checkUnAuth = (req, res, next) => {
+  const token = req.cookies?.adminSave;
+  return token ? next() : res.status(401).redirect("/admin/");
+};
