@@ -57,6 +57,12 @@ const index = {
       noti,
     };
   },
+
+  async header(req) {
+    const searchKey = req.query.searchKey ?? "";
+    const cates = await general.getCates(req);
+    return { searchKey, cates };
+  },
 };
 
 export default index;
