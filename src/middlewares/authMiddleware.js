@@ -2,7 +2,7 @@ import db from "../config/database.js";
 import jwt from "jsonwebtoken";
 import general from "../models/general.model.js";
 
-const query = db.promise().query;
+const query = db.query;
 export const isLoggedIn = async (req, res, next) => {
   try {
     const token = req.cookies?.userSave;

@@ -1,6 +1,6 @@
-import database from "../config/database";
+import db from "../config/database";
 import jwt from "jsonwebtoken";
-const query = database.promise().query;
+const query = db.query;
 
 export const isLoggedIn = async (req, res, next) => {
   try {

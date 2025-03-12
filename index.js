@@ -13,13 +13,14 @@ dotenv.config();
 // const route = require("./src/routes/index");
 
 // Kết nối database
-database.connect((err) => {
-  if (err) {
-    console.log("Kết nối thất bại!");
-  } else {
+database
+  .query("SELECT 1")
+  .then(() => {
     console.log("Kết nối thành công!");
-  }
-});
+  })
+  .catch((err) => {
+    console.error("Kết nối thất bại!", err);
+  });
 // set view engine
 const app = express();
 const __filename = fileURLToPath(import.meta.url);

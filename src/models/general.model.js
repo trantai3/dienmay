@@ -1,7 +1,5 @@
 import db from "../config/database.js";
-import util from "node:util";
-
-const query = util.promisify(db.query).bind(db);
+const query = db.query;
 
 const general = {
   // Hàm xử lý datetỉme ---> Thứ x, ngày x tháng x năm x
@@ -55,14 +53,14 @@ const general = {
   // Lấy id của sản phẩm
   async getProductId(product_variant_id) {
     const sql = `SELECT product_id FROM product_variants WHERE product_variant_id = ?`;
-    const result = await query(sql, [product_variant_id]);
-    return result.length ? result[0].product_id : [];
+    const [rows] = await query(sql, [product_variant_id]);
+    return rows.length ? rows[0].product_id : [];
   },
   // Lấy id của danh mục
   async getCategoryId(product_id) {
     const sql = `SELECT category_id FROM view_product_variants WHERE product_id = ?`;
-    const results = await query(sql, [product_id]);
-    return results.length ? results[0].category_id : [];
+    const [rows] = await query(sql, [product_id]);
+    return rows.length ? rows[0].category_id : [];
   },
   // Lấy danh sách sản phẩm bán chạy
   async getBestSellerProductsOfCates(category_id, limit) {
@@ -73,7 +71,8 @@ const general = {
       LIMIT ?;
     `;
     try {
-      return await query(sql, [category_id, limit]);
+      const [rows] = await query(sql, [category_id, limit]);
+      return rows;
     } catch (error) {
       console.error("Lỗi khi lấy danh sách sản phẩm bán chạy:", error);
       return [];
@@ -88,7 +87,7 @@ const general = {
       GROUP BY c.category_id;
     `;
     try {
-      const cates = await query(sql);
+      const [cates] = await query(sql);
       await Promise.all(
         cates.map(async (cate) => {
           cate.bestSellerProductsOfCates =
@@ -105,7 +104,8 @@ const general = {
   async getOutstandingProducts() {
     const sql = `SELECT * FROM view_products_resume ORDER BY product_view_count DESC LIMIT 7`;
     try {
-      return await query(sql);
+      const [rows] = await query(sql);
+      return rows;
     } catch (error) {
       console.error("Lỗi khi lấy sản phẩm nổi bật:", error);
       return [];
@@ -116,7 +116,7 @@ const general = {
     try {
       const sql =
         "SELECT * FROM view_products_resume ORDER BY product_lastdate_added DESC";
-      const newProducts = await query(sql);
+      const [newProducts] = await query(sql);
       return newProducts;
     } catch (error) {
       console.error("Lỗi khi lấy sản phẩm mới:", error);
@@ -128,7 +128,7 @@ const general = {
     try {
       const sql =
         "SELECT * FROM view_product_variants WHERE discount_amount IS NOT NULL ORDER BY discount_amount DESC";
-      const discountProducts = await query(sql);
+      const [discountProducts] = await query(sql);
       return discountProducts;
     } catch (error) {
       console.error("Lỗi khi lấy sản phẩm giảm giá:", error);
@@ -151,7 +151,7 @@ const general = {
           LIMIT ?
       `;
 
-      const cateProducts = await query(sql, [category_id, limit]);
+      const [cateProducts] = await query(sql, [category_id, limit]);
       return cateProducts;
     } catch (error) {
       console.error("Lỗi khi lấy danh sách sản phẩm theo danh mục:", error);
@@ -172,7 +172,8 @@ const general = {
           LIMIT ?;
       `;
 
-      return await query(sql, [category_id, limit]);
+      const [rows] = await query(sql, [category_id, limit]);
+      return rows;
     } catch (error) {
       console.error(
         "Lỗi khi lấy danh sách sản phẩm không cùng danh mục:",
@@ -185,8 +186,8 @@ const general = {
   async getVariantProduct(product_variant_id) {
     try {
       const sql = `SELECT * FROM view_product_variants WHERE product_variant_id = ?`;
-      const variantProduct = await query(sql, [product_variant_id]);
-      return variantProduct.length ? variantProduct[0] : null;
+      const [variantProducts] = await query(sql, [product_variant_id]);
+      return variantProducts.length ? variantProducts[0] : null;
     } catch (error) {
       console.error("Lỗi khi lấy biến thể sản phẩm:", error);
       return null;
@@ -199,7 +200,7 @@ const general = {
       if (!product_id) return [];
 
       const sql = `SELECT * FROM view_product_variant_detail WHERE product_id = ?`;
-      const productVariants = await query(sql, [product_id]);
+      const [productVariants] = await query(sql, [product_id]);
 
       return productVariants;
     } catch (error) {
