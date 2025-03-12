@@ -43,6 +43,20 @@ const index = {
       return [];
     }
   },
+  async header_user(req) {
+    if (!req.user) return 0;
+
+    const { customer_id, user_id } = req.user;
+    const shortCarts = await index.getShortCart(customer_id);
+    const noti = await index.getNoti(user_id);
+
+    return {
+      user: req.user,
+      countCart: shortCarts.length,
+      shortCarts,
+      noti,
+    };
+  },
 };
 
 export default index;
