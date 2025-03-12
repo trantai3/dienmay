@@ -33,6 +33,16 @@ const index = {
       return 0;
     }
   },
+  async getNoti(user_id) {
+    try {
+      const sql = "SELECT * FROM view_notifications WHERE user_id = ?";
+      const [rows] = await db.query(sql, [user_id]);
+      return rows;
+    } catch (error) {
+      console.error("Error in getNoti:", error);
+      return [];
+    }
+  },
 };
 
 export default index;
