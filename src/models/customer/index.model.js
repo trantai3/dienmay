@@ -22,6 +22,17 @@ const index = {
       return [];
     }
   },
+  async checkCart(customer_id, product_variant_id) {
+    try {
+      const sql =
+        "SELECT * FROM view_cart WHERE customer_id = ? AND product_variant_id = ?";
+      const [rows] = await db.query(sql, [customer_id, product_variant_id]);
+      return rows.length > 0 ? 1 : 0;
+    } catch (error) {
+      console.error("Error in checkCart:", error);
+      return 0;
+    }
+  },
 };
 
 export default index;
