@@ -1,35 +1,29 @@
 import db from "../config/database.js";
 import jwt from "jsonwebtoken";
-import { promisify } from "util";
 import general from "../models/general.model.js";
 
+const query = db.promise().query;
 export const isLoggedIn = async (req, res, next) => {
   try {
-    const token = req.cookies.userSave;
-    console.log(`isLoggedIn: ${token}`);
+    const token = req.cookies?.userSave;
     if (!token) {
       return res.status(401).redirect("/auth/login");
     }
-    // Xác thực token
-    const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
-    // Kiểm tra xem người dùng có tồn tại không
-    db.query(
-      "SELECT * FROM view_user WHERE user_id = ?",
-      [decoded.id],
-      (err, results) => {
-        if (err) {
-          console.error("Database error:", err);
-          return res.status(500).send("Lỗi máy chủ");
-        }
 
-        if (!results || results.length === 0) {
-          return res.status(401).redirect("/auth/login");
-        }
+    // 1. Xác thực token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-        req.user = results[0]; // Gán thông tin người dùng vào req
-        next();
-      }
-    );
+    // 2. Kiểm tra xem người dùng có tồn tại không
+    const [results] = await query("SELECT * FROM view_user WHERE user_id = ?", [
+      decoded.id,
+    ]);
+
+    if (results.length === 0) {
+      return res.status(401).redirect("/auth/login");
+    }
+
+    req.user = results[0]; // Gán thông tin người dùng vào req
+    next();
   } catch (err) {
     console.error("Authentication error:", err);
     res.status(401).redirect("/auth/login");
@@ -37,38 +31,28 @@ export const isLoggedIn = async (req, res, next) => {
 };
 
 export const checkAuth = (req, res, next) => {
-  if (req.cookies.userSave) {
-    res.redirect("/");
-  } else {
-    next();
-  }
+  return req.cookies?.userSave ? res.redirect("/") : next();
 };
 
 export const checkUnAuth = (req, res, next) => {
-  if (!req.cookies.userSave) {
-    res.status(401).redirect("/");
-  } else {
-    next();
-  }
+  return !req.cookies?.userSave ? res.status(401).redirect("/") : next();
 };
 
 export const getLoggedIn = async (req, res, next) => {
-  if (!req.cookies.userSave) {
+  if (!req.cookies?.userSave) {
     return next();
   }
+
   try {
     // 1. Xác thực token
-    const decoded = await promisify(jwt.verify)(
-      req.cookies.userSave,
-      process.env.JWT_SECRET
-    );
-    // Kiểm tra người dùng còn tồn tại không
-    const query = promisify(db.query).bind(db);
-    const results = await query("SELECT * FROM view_user WHERE user_id = ?", [
+    const decoded = jwt.verify(req.cookies.userSave, process.env.JWT_SECRET);
+
+    // 2. Kiểm tra người dùng có tồn tại không
+    const [results] = await query("SELECT * FROM view_user WHERE user_id = ?", [
       decoded.id,
     ]);
 
-    if (!results.length) {
+    if (results.length === 0) {
       return next();
     }
 
